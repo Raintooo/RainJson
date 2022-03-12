@@ -1,6 +1,7 @@
 #include <stack>
 
 #include "JsonCodec.h"
+#include "JsonValue.h"
 
 
 namespace RainJson
@@ -38,7 +39,7 @@ static bool _encode(const std::string &key, const Json& json, std::string& encRe
     if(json.isObject())
     {
         encRet += "{";
-        for(const auto& n : json.object_value())
+        for(const auto& n : const_cast<Json&>(json).object_value())
         {
             _encode(n.first, n.second, encRet);
         }
@@ -53,7 +54,7 @@ static bool _encode(const std::string &key, const Json& json, std::string& encRe
     else if(json.isArray())
     {
         encRet += "[";
-        for(const auto& n : json.array_value())
+        for(const auto& n : const_cast<Json&>(json).array_value())
         {
             _encode("", n, encRet);
         }
@@ -67,12 +68,12 @@ static bool _encode(const std::string &key, const Json& json, std::string& encRe
     }
     else if(json.isDouble())
     {
-        encRet += std::to_string(json.double_value());
+        encRet += std::to_string(const_cast<Json&>(json).double_value());
     }
     else if(json.isString())
     {
         encRet += "\"";
-        std::string s = json.string_value();
+        std::string s = const_cast<Json&>(json).string_value();
         
         stringProcess(s);
 
@@ -81,11 +82,11 @@ static bool _encode(const std::string &key, const Json& json, std::string& encRe
     }
     else if(json.isNumber())
     {
-        encRet += std::to_string(json.num_value());
+        encRet += std::to_string(const_cast<Json&>(json).num_value());
     }
     else if(json.isBool())
     {
-        encRet += json.bool_value() ? "true" : "false";
+        encRet += const_cast<Json&>(json).bool_value() ? "true" : "false";
     }
 
     encRet += ",";
@@ -99,7 +100,7 @@ bool JCodec::encode(const Json& json, std::string& encRet)
 
     encRet += "{";
 
-    for(const auto& n : json.object_value())
+    for(const auto& n : const_cast<Json&>(json).object_value())
     {
         _encode(n.first, n.second, encRet);
     }
@@ -220,6 +221,12 @@ static int _parser(Json& json, const std::string& data)
             json = JObject();
         }
 
+        Json arrNode;
+        if(json.isArray())
+        {
+            arrNode = JObject();
+        }
+
         size_t ks = data.find_first_of("\"");
         size_t ke = data.find_first_of(":");
         ret = 0;
@@ -235,7 +242,15 @@ static int _parser(Json& json, const std::string& data)
                 {
                     ret += (sk - ret);
                 }
-                ret += _parser(json, data.substr(sk));
+
+                if(json.isArray())
+                {
+                    ret += _parser(arrNode, data.substr(sk));
+                }
+                else
+                {
+                    ret += _parser(json, data.substr(sk));
+                }
             }
         }
     }
@@ -246,17 +261,18 @@ static int _parser(Json& json, const std::string& data)
 
         if(ks != std::string::npos && ke != std::string::npos)
         {
-            Json subObj;
+            Json subObj = JObject();
+
             int b = skip(data, ke) + 1;//data.find_first_of("\"", ke);
 
-            int len = findEnd(data.substr(b)); 
+            int len = findEnd(data.substr((b = skip(data, b)))); 
              
             if(data[b] != '{' && data[b] != '[' )
             {
                 len += 2;// len是字符串长度 +2是把双引号号加进去, 保留双引号 
             }
 
-            //  std::string tmp = data.substr(ks+1, data.find_first_of("\"", ks+1) - 1);
+            // std::string tmp = data.substr(ks+1, data.find_first_of("\"", ks+1) - 1);
 
             ret = _parser(subObj, data.substr(b, len));
 
@@ -269,21 +285,58 @@ static int _parser(Json& json, const std::string& data)
             std::string s = data;
 
             s.erase(0, 1);
-            s.erase(s.length()-1, 1);
 
-            if(s.find_last_of(',') != std::string::npos)
+            if(s.find_last_of(',') != std::string::npos || 
+                s.find_last_of('}') != std::string::npos || 
+                s.find_last_of(']') != std::string::npos )
+            {
+                s.erase(s.length()-2, 2);
+                ret = 2;
+            }
+            else
             {
                 s.erase(s.length()-1, 1);
             }
 
-            json = Json(s);
+            if(json.isArray())
+            {
+                json.array_value().push_back(std::move(Json(s)));
+                // dynamic_cast<JValueArray*>(json.ptr().get())->push_back(std::move(Json(s)));
+            }
+            else
+            {
+                json = Json(s);
+            }
+
+            ret += s.length();
         }
     }
     else if(data[ret] == '[')
     {
+        int b = skip(data, ret);
 
+        if(!json.isArray())
+        {
+            json = JArray();
+        }
+
+        int e = findEnd(data.substr(b));
+        int len = 0; 
+
+        while(len + 1 < e) // +1 加上 '[' 长度
+        {
+            int sk = skip(data, len);
+            if(sk > len)
+            {
+                len += (sk - len);
+            }
+
+            len += _parser(json, data.substr(b + 1 + len, e));
+        }
+
+        ret = b;
     }
-    else if(data[ret] == '}')
+    else if(data[ret] == '}' || data[ret] == ']')
     {
         int e = skip(data, 1);
 
@@ -304,7 +357,15 @@ static int _parser(Json& json, const std::string& data)
 
             trim(num);
 
-            json = std::stoi(num);
+            if(json.isArray())
+            {
+                json.array_value().push_back(std::move(Json(std::stoi(num))));
+                // dynamic_cast<JValueArray*>(json.ptr().get())->push_back(Json(std::stoi(num)));
+            }
+            else
+            {
+                json = std::stoi(num);
+            }
             ret = e + 1;
         }
     }

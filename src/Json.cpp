@@ -50,6 +50,11 @@ Json& Json::operator[] (uint32_t i)
     return (*m_value)[i];
 }
 
+std::shared_ptr<JValue> Json::ptr()
+{
+    return m_value;
+}
+
 bool Json::isContained(const std::string& key)
 {
     bool ret = isObject();
@@ -97,32 +102,32 @@ bool Json::isBool() const
     return m_value->type() == BOOL ? true : false;
 }
 
-int Json::num_value() const
+int& Json::num_value()
 {
     return m_value->num_value();
 }
 
-bool Json::bool_value() const
+bool& Json::bool_value()
 {
     return m_value->bool_value();
 }
 
-double Json::double_value() const
+double& Json::double_value()
 {
     return m_value->double_value();
 }
 
-std::string Json::string_value() const
+std::string& Json::string_value()
 {
     return m_value->string_value();
 }
 
-JObject Json::object_value() const
+JObject& Json::object_value()
 {
     return m_value->object_value();
 }
 
-JArray Json::array_value() const
+JArray& Json::array_value()
 {
     return m_value->array_value();
 }

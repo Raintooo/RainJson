@@ -34,18 +34,34 @@ int main()
 
     // cout<< cJSON_Print(root);
 
-    std::string ss("\n{\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\"\n}");
+    std::string ss("\n{\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\"\f\f:\f\f\"eeee\",\"k\":\f[8890,\"kkkk\"]\n\n}\n\n");
+    // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
 
     RainJson::Json jj =  RainJson::Json::parser(ss);
 
-    RainJson::Json jo = jj["b"];
+    // RainJson::Json jo = jj["b"];
+
+    RainJson::JArray jarr = jj["k"].array_value();
+
+    for(auto& n : jarr)
+    {
+        if(n.isNumber())
+        {
+            cout<< n.num_value()<< endl;
+        }
+        else if(n.isString())
+        {
+            cout<< n.string_value()<< endl;
+        }
+    }
 
     cout<< jj["a"].num_value()<< endl;
-
-    cout<< jo["c"].num_value()<< endl;
-    cout<< jo["d"].string_value()<< endl;
-
-    cout<< jj.isContained("d")<< endl;
     cout<< jj["e"].string_value()<< endl;
+
+    // cout<< jo["c"].num_value()<< endl;
+    // cout<< jo["d"].string_value()<< endl;
+
+    // cout<< jj.isContained("d")<< endl;
+    // cout<< jj["e"].string_value()<< endl;
 
 }

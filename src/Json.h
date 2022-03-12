@@ -32,12 +32,12 @@ public:
     virtual std::string print();
 
     virtual JType type() const = 0;
-    virtual int num_value() const;
-    virtual bool bool_value() const;
-    virtual double double_value() const;
-    virtual std::string string_value() const;
-    virtual JObject object_value() const;
-    virtual JArray array_value() const;
+    virtual int& num_value();
+    virtual bool& bool_value();
+    virtual double& double_value();
+    virtual std::string& string_value();
+    virtual JObject& object_value();
+    virtual JArray& array_value();
 
     virtual Json& operator[] (const std::string& key);
     virtual Json& operator[] (uint32_t i);
@@ -65,6 +65,8 @@ public:
     Json& operator[] (const std::string& val);
     Json& operator[] (uint32_t i);
 
+    std::shared_ptr<JValue> ptr();
+
     bool isContained(const std::string& key);
 
     bool isNull() const;
@@ -76,12 +78,12 @@ public:
     bool isObject() const;
     bool isBool() const;
 
-    int num_value() const;
-    bool bool_value() const;
-    double double_value() const;
-    std::string string_value() const;
-    JObject object_value() const;
-    JArray array_value() const;
+    int& num_value();
+    bool& bool_value();
+    double& double_value();
+    std::string& string_value();
+    JObject& object_value();
+    JArray& array_value();
 
     std::string print() const;
 

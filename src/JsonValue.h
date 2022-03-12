@@ -25,13 +25,13 @@ protected:
     }
 };
 
-class JValueBool : public Value<BOOL, int>
+class JValueBool : public Value<BOOL, bool>
 {
 
 public:
     JValueBool(bool v) : Value(v){}
 
-    bool bool_value() const;
+    bool& bool_value();
 }; 
 
 class JValueInt : public Value<INT, int>
@@ -40,7 +40,7 @@ class JValueInt : public Value<INT, int>
 public:
     JValueInt(int v) : Value(v){}
 
-    int num_value() const;  
+    int& num_value();  
 }; 
 
 class JValueDouble : public Value<DOUBLE, double>
@@ -49,7 +49,7 @@ class JValueDouble : public Value<DOUBLE, double>
 public:
     JValueDouble(double val) : Value(val){}
 
-    double double_value() const;
+    double& double_value();
 };
 
 class JValueString : public Value<STRING, std::string>
@@ -58,7 +58,7 @@ class JValueString : public Value<STRING, std::string>
 public:
     JValueString(const std::string& val) : Value(val){}
 
-    std::string string_value() const;
+    std::string& string_value();
 };
 
 class JValueArray : public Value<ARRAY, JArray>
@@ -67,7 +67,9 @@ class JValueArray : public Value<ARRAY, JArray>
 public:
     JValueArray(const JArray& val) : Value(val){}
 
-    JArray array_value() const;
+    JArray& array_value();
+
+    void push_back(const Json& val);
 
     Json& operator[] (uint32_t i);   
 };
@@ -80,7 +82,7 @@ public:
 
     std::string print(); 
 
-    JObject object_value() const;
+    JObject& object_value();
 
     Json& operator[] (const std::string& key);
 };

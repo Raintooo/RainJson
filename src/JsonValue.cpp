@@ -9,19 +9,22 @@ static Json& nul_val()
     return nul;
 }
 
-int JValue::num_value() const
+int& JValue::num_value()
 {
-    return 0;
+    static int nul = 0;
+    return nul;
 }
 
-bool JValue::bool_value() const
+bool& JValue::bool_value()
 {
-    return false;
+    static bool nul = false;
+    return nul;
 }
 
-double JValue::double_value() const
+double& JValue::double_value()
 {
-    return 0.0f;
+    static double nul = 0.0f;
+    return nul;
 }
 
 // ====================================================
@@ -31,19 +34,22 @@ std::string JValue::print()
     return "";
 }
 
-std::string JValue::string_value() const
+std::string& JValue::string_value()
 {
-    return "";
+    static std::string nul;
+    return nul;
 }
 
-JObject JValue::object_value() const
+JObject& JValue::object_value()
 {
-    return JObject();
+    static JObject nul;
+    return nul;
 }
 
-JArray JValue::array_value() const
+JArray& JValue::array_value()
 {
-    return JArray();
+    static JArray nul;
+    return nul;
 }
 
 Json& JValue::operator[] (const std::string& key)
@@ -58,42 +64,46 @@ Json& JValue::operator[] (uint32_t i)
 
 //===================================================================
 
-bool JValueBool::bool_value() const
+bool& JValueBool::bool_value()
 {
     return m_value;
 }
 
 
-int JValueInt::num_value() const
+int& JValueInt::num_value()
 {
     return m_value;
 }
  
 
-double JValueDouble::double_value() const
+double& JValueDouble::double_value()
 {
     return m_value;
 }
 
 
-std::string JValueString::string_value() const
+std::string& JValueString::string_value()
 {
     return m_value;
 }
 
 
-JArray JValueArray::array_value() const
+JArray& JValueArray::array_value()
 {
     return m_value;
 }
 
+void JValueArray::push_back(const Json& val)
+{
+    m_value.push_back(val);
+}
 
 Json& JValueArray::operator[] (uint32_t i)
 {
     return m_value.size() < i ? m_value[i] : nul_val();
 } 
 
-JObject JValueObject::object_value() const
+JObject& JValueObject::object_value()
 {
     return m_value;
 }
