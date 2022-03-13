@@ -115,7 +115,7 @@ bool JCodec::encode(const Json& json, std::string& encRet)
     return ret;
 }
 
-static int findEnd(const std::string& data)
+static int findEnd(const std::string_view& data)
 {
     int ret = 0;
 
@@ -319,9 +319,11 @@ static int _parser(Json& json, const std::string& data)
         {
             Json subObj = JObject();
 
-            int b = skip(data, ke) + 1;//data.find_first_of("\"", ke);
+            int b = skip(data, ke+1);
 
-            int len = findEnd(data.substr((b = skip(data, b)))); 
+            int len = findEnd(std::string_view(data.c_str() + b, data.length() - b)); 
+
+            // int len = findEnd(data.substr((b = skip(data, b)))); 
              
             if(data[b] != '{' && data[b] != '[' )
             {
@@ -375,7 +377,9 @@ static int _parser(Json& json, const std::string& data)
             json = JArray();
         }
 
-        int e = findEnd(data.substr(b));
+        // std::string_view s(data.c_str() + b, data.length() - b);
+        // int e = findEnd(data.substr(b));
+        int e = findEnd(std::string_view(data.c_str() + b, data.length() - b));
         int len = 0; 
         int i = 0;
 

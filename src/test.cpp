@@ -34,7 +34,7 @@ int main()
 
     // cout<< cJSON_Print(root);
 
-    std::string ss("{\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":\r\r[\r\r8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}\r\r]\n\f}");
+    std::string ss("{\"a\":123,\"b\":{\"c\"\r\r:345,\"d\":\"ddd\"},\"e\":\r\r\"eeee\",\"k\":\r\r[\r\r8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}\r\r]\n\f}");
     // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
 
     RainJson::Json jj =  RainJson::Json::parser(ss);
