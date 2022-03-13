@@ -34,7 +34,7 @@ int main()
 
     // cout<< cJSON_Print(root);
 
-    std::string ss("{\"a\":123,\"b\":{\"c\"\r\r:345,\"d\":\"ddd\"},\"e\":\r\r\"eeee\",\"k\":\r\r[\r\r8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}\r\r]\n\f}");
+    std::string ss("{\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}]}");
     // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
 
     RainJson::Json jj =  RainJson::Json::parser(ss);
@@ -45,7 +45,14 @@ int main()
         return 0;
     }
 
-    // RainJson::Json jo = jj["b"];
+    cout<< jj["a"].num_value()<< endl;
+
+    RainJson::Json jo = jj["b"];
+    cout<< jo["c"].num_value()<< endl;
+    cout<< jo["d"].string_value()<< endl;
+
+
+    cout<< jj["e"].string_value()<< endl;
 
     RainJson::JArray jarr = jj["k"].array_value();
 
@@ -65,9 +72,6 @@ int main()
             cout<< "oo: "<< n["oo"].string_value()<< endl;
         }
     }
-
-    cout<< jj["a"].num_value()<< endl;
-    cout<< jj["e"].string_value()<< endl;
 
     // cout<< jo["c"].num_value()<< endl;
     // cout<< jo["d"].string_value()<< endl;

@@ -7,6 +7,8 @@
 namespace RainJson
 {
 
+static int _parser(Json& json, const std::string& data);
+
 void stringProcess(std::string& s)
 {
     size_t i = 0;
@@ -270,7 +272,8 @@ static bool isVaildFormat(const std::string& data)
         std::stack<char> stack;
 
         stack.push(data[begin]);
-    
+        i++;
+
         while (stack.size() && (i < data.length()))
         {
             if((data[i] == '{') || (data[i] == '[') )
@@ -295,177 +298,209 @@ static bool isVaildFormat(const std::string& data)
     return ret;
 }
 
+static int parseObject(Json& json, const std::string& data)
+{
+    int ret = 0;
+
+    if(json.isNull())
+    {
+        json = JObject();
+    }
+
+    Json arrNode;
+    if(json.isArray())
+    {
+        arrNode = JObject();
+    }
+
+    size_t ks = data.find_first_of("\"");
+    size_t ke = data.find_first_of(":");
+    if(ks != std::string::npos && ke != std::string::npos)
+    {
+        int s = data.find_first_of("{");
+        ret += skip(data, s) + 1;
+
+        while(ret < data.length())
+        {
+            int sk = skip(data, ret);
+            if(sk > ret)
+            {
+                ret += (sk - ret);
+            }
+
+            if(json.isArray())
+            {
+                ret += _parser(arrNode, data.substr(sk));
+            }
+            else
+            {
+                ret += _parser(json, data.substr(sk));
+            }
+        }
+    }
+
+    if(!arrNode.isNull())
+    {
+        json.array_value().push_back(arrNode);
+    }
+
+    return ret;
+}
+
+static int parseArray(Json& json, const std::string& data, int begin)
+{
+    int ret = 0;
+
+    int b = skip(data, begin);
+
+    if(!json.isArray())
+    {
+        json = JArray();
+    }
+
+    // std::string_view s(data.c_str() + b, data.length() - b);
+    // int e = findEnd(data.substr(b));
+    int e = findEnd(std::string_view(data.c_str() + b, data.length() - b));
+    int len = 0; 
+    int i = 0;
+
+    while(len + 1 < e) // +1 加上 '[' 长度
+    {
+        int sk = skip(data, len);
+        if(sk > len)
+        {
+            len += (sk - len);
+        }
+
+        int l = getArrayElementLen(data, i++);
+
+        len += _parser(json, data.substr(b + 1 + len, l));
+    }
+
+    ret = b; 
+
+    return ret;   
+}
+
+static int parseString(Json& json, const std::string& data, int begin)
+{
+    int ret = 0;
+
+    size_t ks = begin;//data.find_first_of("\"");
+    size_t ke = data.find_first_of(":", ks);
+
+    if(ks != std::string::npos && ke != std::string::npos)
+    {
+        Json subObj = JObject();
+
+        int b = skip(data, ke+1);
+
+        int len = findEnd(std::string_view(data.c_str() + b, data.length() - b)); 
+
+        // int len = findEnd(data.substr((b = skip(data, b)))); 
+            
+        if(data[b] != '{' && data[b] != '[' )
+        {
+            len += 2;// len是字符串长度 +2是把双引号号加进去, 保留双引号 
+        }
+
+        // std::string tmp = data.substr(ks+1, data.find_first_of("\"", ks+1) - 1);
+
+        ret = _parser(subObj, data.substr(b, len));
+
+        json[std::move(data.substr(ks+1, data.find_first_of("\"", ks+1) - 1))] = subObj;
+
+        ret = b + len;
+    }
+    else if(ks != std::string::npos)
+    {
+        std::string s = data;
+
+        s.erase(0, 1);
+
+        if(s.find_last_of(',') != std::string::npos || 
+            s.find_last_of('}') != std::string::npos || 
+            s.find_last_of(']') != std::string::npos )
+        {
+            s.erase(s.length()-2, 2);
+        }
+        else
+        {
+            s.erase(s.length()-1, 1);
+        }
+
+        if(json.isArray())
+        {
+            json.array_value().push_back(std::move(Json(s)));
+            // dynamic_cast<JValueArray*>(json.ptr().get())->push_back(std::move(Json(s)));
+        }
+        else
+        {
+            json = Json(s);
+        }
+
+        ret = data.length();
+    }    
+
+    return ret;
+}
+
+static int parseEnd(Json& json, const std::string& data, int begin)
+{
+    int ret = begin;
+
+    int e = skip(data, 1);
+
+    if(data.find_first_of(',') != std::string::npos)
+    {
+        ret += 1;
+    }
+
+    ret += e;
+
+    return ret;
+}
+
+static int parseNumber(Json& json, const std::string& data)
+{
+    int ret = 0;
+    int e = 0;
+    if((e = data.find_first_of(',')) != std::string::npos || 
+        (e = data.find_first_of('}')) != std::string::npos)
+    {
+        std::string num = std::move(data.substr(0, e));
+
+        trim(num);
+
+        if(json.isArray())
+        {
+            json.array_value().push_back(std::move(Json(std::stoi(num))));
+            // dynamic_cast<JValueArray*>(json.ptr().get())->push_back(Json(std::stoi(num)));
+        }
+        else
+        {
+            json = std::stoi(num);
+        }
+        ret = e + 1;
+    }   
+
+    return ret; 
+}
+
 static int _parser(Json& json, const std::string& data)
 {
     int ret = 0;
 
     ret = skip(data, 0);
 
-    if(data[ret] == '{')
+    switch (data[ret])
     {
-        if(json.isNull())
-        {
-            json = JObject();
-        }
-
-        Json arrNode;
-        if(json.isArray())
-        {
-            arrNode = JObject();
-        }
-
-        size_t ks = data.find_first_of("\"");
-        size_t ke = data.find_first_of(":");
-        ret = 0;
-        if(ks != std::string::npos && ke != std::string::npos)
-        {
-            int s = data.find_first_of("{");
-            ret += skip(data, s) + 1;
-
-            while(ret < data.length())
-            {
-                int sk = skip(data, ret);
-                if(sk > ret)
-                {
-                    ret += (sk - ret);
-                }
-
-                if(json.isArray())
-                {
-                    ret += _parser(arrNode, data.substr(sk));
-                }
-                else
-                {
-                    ret += _parser(json, data.substr(sk));
-                }
-            }
-        }
-
-        if(!arrNode.isNull())
-        {
-            json.array_value().push_back(arrNode);
-        }
-    }
-    else if(data[ret] == '\"')
-    {
-        size_t ks = ret;//data.find_first_of("\"");
-        size_t ke = data.find_first_of(":", ks);
-
-        if(ks != std::string::npos && ke != std::string::npos)
-        {
-            Json subObj = JObject();
-
-            int b = skip(data, ke+1);
-
-            int len = findEnd(std::string_view(data.c_str() + b, data.length() - b)); 
-
-            // int len = findEnd(data.substr((b = skip(data, b)))); 
-             
-            if(data[b] != '{' && data[b] != '[' )
-            {
-                len += 2;// len是字符串长度 +2是把双引号号加进去, 保留双引号 
-            }
-
-            // std::string tmp = data.substr(ks+1, data.find_first_of("\"", ks+1) - 1);
-
-            ret = _parser(subObj, data.substr(b, len));
-
-            json[std::move(data.substr(ks+1, data.find_first_of("\"", ks+1) - 1))] = subObj;
-
-            ret = b + len;
-        }
-        else if(ks != std::string::npos)
-        {
-            std::string s = data;
-
-            s.erase(0, 1);
-
-            if(s.find_last_of(',') != std::string::npos || 
-                s.find_last_of('}') != std::string::npos || 
-                s.find_last_of(']') != std::string::npos )
-            {
-                s.erase(s.length()-2, 2);
-            }
-            else
-            {
-                s.erase(s.length()-1, 1);
-            }
-
-            if(json.isArray())
-            {
-                json.array_value().push_back(std::move(Json(s)));
-                // dynamic_cast<JValueArray*>(json.ptr().get())->push_back(std::move(Json(s)));
-            }
-            else
-            {
-                json = Json(s);
-            }
-
-            ret = data.length();
-        }
-    }
-    else if(data[ret] == '[')
-    {
-        int b = skip(data, ret);
-
-        if(!json.isArray())
-        {
-            json = JArray();
-        }
-
-        // std::string_view s(data.c_str() + b, data.length() - b);
-        // int e = findEnd(data.substr(b));
-        int e = findEnd(std::string_view(data.c_str() + b, data.length() - b));
-        int len = 0; 
-        int i = 0;
-
-        while(len + 1 < e) // +1 加上 '[' 长度
-        {
-            int sk = skip(data, len);
-            if(sk > len)
-            {
-                len += (sk - len);
-            }
-
-            int l = getArrayElementLen(data, i++);
-
-            len += _parser(json, data.substr(b + 1 + len, l));
-        }
-
-        ret = b;
-    }
-    else if(data[ret] == '}' || data[ret] == ']')
-    {
-        int e = skip(data, 1);
-
-        if(data.find_first_of(',') != std::string::npos)
-        {
-            ret += 1;
-        }
-
-        ret += e;
-    }
-    else
-    {
-        int e = 0;
-        if((e = data.find_first_of(',')) != std::string::npos || 
-            (e = data.find_first_of('}')) != std::string::npos)
-        {
-            std::string num = std::move(data.substr(0, e));
-
-            trim(num);
-
-            if(json.isArray())
-            {
-                json.array_value().push_back(std::move(Json(std::stoi(num))));
-                // dynamic_cast<JValueArray*>(json.ptr().get())->push_back(Json(std::stoi(num)));
-            }
-            else
-            {
-                json = std::stoi(num);
-            }
-            ret = e + 1;
-        }
+        case '{':  ret = parseObject(json, data); break;
+        case '\"': ret = parseString(json, data, ret); break;
+        case '[':  ret = parseArray(json, data, ret); break;
+        case '}':
+        case ']':  ret = parseEnd(json, data, ret); break;
+        default:   ret = parseNumber(json, data); break;
     }
 
     return ret;
