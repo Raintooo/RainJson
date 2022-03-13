@@ -34,7 +34,7 @@ int main()
 
     // cout<< cJSON_Print(root);
 
-    std::string ss("\n{\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\"\f\f:\f\f\"eeee\",\"k\":\f[8890,\"kkkk\"]\n\n}\n\n");
+    std::string ss("{\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":\r\r[\r\r8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}\r\r]\n\f}");
     // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
 
     RainJson::Json jj =  RainJson::Json::parser(ss);
@@ -52,6 +52,11 @@ int main()
         else if(n.isString())
         {
             cout<< n.string_value()<< endl;
+        }
+        else if(n.isObject())
+        {
+            cout<< "cc: "<< n["cc"].num_value()<< endl;
+            cout<< "oo: "<< n["oo"].string_value()<< endl;
         }
     }
 

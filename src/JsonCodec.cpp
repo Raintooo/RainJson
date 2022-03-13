@@ -208,6 +208,57 @@ static int skip(const std::string& s, int b)
     return ret;
 }
 
+static int getArrayElementLen(const std::string& data, int i)
+{
+    int ret = 0;
+    bool isInString = false;
+    bool isObject = false;
+    int curindex = 0;
+
+    if(!data.empty())
+    {
+        int k = 0;
+        for(k = 1; k < data.length(); k++)
+        {
+            if(data[k] == ']' && !isInString)
+            {
+                break;
+            }
+            else if(data[k] == '{')
+            {
+                isObject = !isObject;
+            }
+            else if((data[k] == ',' && !isInString && !isObject) || (data[k] == '}' && isObject))
+            {
+                ret++; // ','长度也加上
+
+                if(curindex == i)
+                {
+                    break;
+                }
+                else
+                {
+                    ret = 0;
+                    curindex++;
+                    continue;;
+                }
+
+                curindex++;
+            }
+            else if(data[k] == '\"')
+            {
+                isInString = !isInString;
+            }
+
+            ret++;
+        }
+
+        ret = ret == 0 ? 1 : ret;
+    }
+
+    return ret;
+}
+
 static int _parser(Json& json, const std::string& data)
 {
     int ret = 0;
@@ -253,10 +304,15 @@ static int _parser(Json& json, const std::string& data)
                 }
             }
         }
+
+        if(!arrNode.isNull())
+        {
+            json.array_value().push_back(arrNode);
+        }
     }
     else if(data[ret] == '\"')
     {
-        size_t ks = data.find_first_of("\"");
+        size_t ks = ret;//data.find_first_of("\"");
         size_t ke = data.find_first_of(":", ks);
 
         if(ks != std::string::npos && ke != std::string::npos)
@@ -291,7 +347,6 @@ static int _parser(Json& json, const std::string& data)
                 s.find_last_of(']') != std::string::npos )
             {
                 s.erase(s.length()-2, 2);
-                ret = 2;
             }
             else
             {
@@ -308,7 +363,7 @@ static int _parser(Json& json, const std::string& data)
                 json = Json(s);
             }
 
-            ret += s.length();
+            ret = data.length();
         }
     }
     else if(data[ret] == '[')
@@ -322,6 +377,7 @@ static int _parser(Json& json, const std::string& data)
 
         int e = findEnd(data.substr(b));
         int len = 0; 
+        int i = 0;
 
         while(len + 1 < e) // +1 加上 '[' 长度
         {
@@ -331,7 +387,9 @@ static int _parser(Json& json, const std::string& data)
                 len += (sk - len);
             }
 
-            len += _parser(json, data.substr(b + 1 + len, e));
+            int l = getArrayElementLen(data, i++);
+
+            len += _parser(json, data.substr(b + 1 + len, l));
         }
 
         ret = b;
