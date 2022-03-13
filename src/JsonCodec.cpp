@@ -130,7 +130,6 @@ static int findEnd(const std::string_view& data)
 
             while(s.size())
             {
-                char t = data[ret];
                 if((data[ret] == '{') || (data[ret] == '[') )
                 {
                     s.push(data[ret]);
@@ -259,6 +258,43 @@ static int getArrayElementLen(const std::string& data, int i)
     return ret;
 }
 
+static bool isVaildFormat(const std::string& data)
+{
+    bool ret = true;
+
+    int begin = skip(data, 0);
+
+    if(data[begin] == '{' || data[begin] == '[')
+    {
+        int i = begin;
+        std::stack<char> stack;
+
+        stack.push(data[begin]);
+    
+        while (stack.size() && (i < data.length()))
+        {
+            if((data[i] == '{') || (data[i] == '[') )
+            {
+                stack.push(data[i]);
+            }
+            else if((data[i] == '}') || (data[i] == ']'))
+            {
+                stack.pop();
+            }
+
+            i++;
+        }
+        
+        ret = (stack.size() > 0) ? false : true;
+    }
+    else
+    {
+        ret = false;
+    }
+
+    return ret;
+}
+
 static int _parser(Json& json, const std::string& data)
 {
     int ret = 0;
@@ -334,7 +370,7 @@ static int _parser(Json& json, const std::string& data)
 
             ret = _parser(subObj, data.substr(b, len));
 
-            json[data.substr(ks+1, data.find_first_of("\"", ks+1) - 1)] = subObj;
+            json[std::move(data.substr(ks+1, data.find_first_of("\"", ks+1) - 1))] = subObj;
 
             ret = b + len;
         }
@@ -415,7 +451,7 @@ static int _parser(Json& json, const std::string& data)
         if((e = data.find_first_of(',')) != std::string::npos || 
             (e = data.find_first_of('}')) != std::string::npos)
         {
-            std::string num = data.substr(0, e);
+            std::string num = std::move(data.substr(0, e));
 
             trim(num);
 
@@ -437,11 +473,15 @@ static int _parser(Json& json, const std::string& data)
 
 Json JCodec::parser(const std::string& data)
 {
-    Json ret = JObject();
+    Json ret;
 
     if(!data.empty())
     {
-        _parser(ret, data); 
+        if(isVaildFormat(data))
+        {
+            ret = JObject();
+            _parser(ret, data); 
+        }
     }
 
     return ret;

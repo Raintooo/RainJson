@@ -39,6 +39,12 @@ int main()
 
     RainJson::Json jj =  RainJson::Json::parser(ss);
 
+    if(jj.isNull())
+    {
+        cout<< "invaild json";
+        return 0;
+    }
+
     // RainJson::Json jo = jj["b"];
 
     RainJson::JArray jarr = jj["k"].array_value();
