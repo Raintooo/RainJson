@@ -36,7 +36,7 @@ int main()
 
     std::string ss("{\"null\":111,\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}]}");
     // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
-
+    // std::string ss;
     RainJson::Json jj;
 
     cout<< "jj: "<< jj.empty()<< endl;
@@ -87,6 +87,10 @@ int main()
                 cout<< "oo: "<< n["oo"].string_value()<< endl;
             }
         }
+    }
+    else
+    {
+        cout<< "parse json failed"<< endl;
     }
 
     // cout<< jo["c"].num_value()<< endl;

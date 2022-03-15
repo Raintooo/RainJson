@@ -575,9 +575,9 @@ static int _parser(Json& json, const std::string& data)
 
 bool JCodec::parser(const std::string& data, Json& json)
 {
-    bool ret = true;
+    bool ret = !data.empty() && isVaildFormat(data);
 
-    if(!data.empty() && isVaildFormat(data))
+    if(ret)
     {
         json = JObject();
         int n =  _parser(json, data);
