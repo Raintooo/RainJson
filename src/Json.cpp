@@ -10,6 +10,11 @@ Json::Json(int val)
     m_value = std::make_shared<JValueInt>(val);
 }
 
+Json::Json(std::nullptr_t val)
+{
+    m_value = std::make_shared<JValueNULL>(val);
+}
+
 Json::Json(double val)
 {
     m_value = std::make_shared<JValueDouble>(val);
@@ -50,9 +55,9 @@ Json& Json::operator[] (uint32_t i)
     return (*m_value)[i];
 }
 
-std::shared_ptr<JValue> Json::ptr()
+bool Json::empty() const
 {
-    return m_value;
+    return m_value == nullptr;
 }
 
 bool Json::isContained(const std::string& key)
@@ -69,7 +74,7 @@ bool Json::isContained(const std::string& key)
 
 bool Json::isNull() const
 {
-    return m_value == nullptr;
+    return m_value->type() == NUL ? true : false;
 }
 
 bool Json::isArray() const

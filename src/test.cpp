@@ -34,16 +34,25 @@ int main()
 
     // cout<< cJSON_Print(root);
 
-    std::string ss("{\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}]}");
+    std::string ss("{\"null\":null,\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}]}");
     // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
 
-    RainJson::Json jj =  RainJson::Json::parser(ss);
+    RainJson::Json jj;
 
-    if(jj.isNull())
+    cout<< "jj: "<< jj.empty()<< endl;
+
+    jj = RainJson::Json::parser(ss);
+
+    cout<< "jj: "<< jj.empty()<< endl;
+
+    if(jj.empty())
     {
         cout<< "invaild json";
         return 0;
     }
+
+    cout<< jj["null"].isNull()<< endl;
+    cout<< jj["null"].isBool()<< endl;
 
     cout<< jj["a"].num_value()<< endl;
 

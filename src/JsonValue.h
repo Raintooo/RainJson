@@ -25,6 +25,17 @@ protected:
     }
 };
 
+class NULLObject
+{
+};
+
+class JValueNULL : public Value<NUL, NULLObject>
+{
+
+public:
+    JValueNULL(std::nullptr_t val) : Value(NULLObject()){}
+};
+
 class JValueBool : public Value<BOOL, bool>
 {
 

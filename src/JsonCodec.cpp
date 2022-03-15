@@ -90,6 +90,10 @@ static bool _encode(const std::string &key, const Json& json, std::string& encRe
     {
         encRet += const_cast<Json&>(json).bool_value() ? "true" : "false";
     }
+    else
+    {
+        encRet += "null";
+    }
 
     encRet += ",";
 
@@ -302,7 +306,7 @@ static int parseObject(Json& json, const std::string& data)
 {
     int ret = 0;
 
-    if(json.isNull())
+    if(json.empty())
     {
         json = JObject();
     }
@@ -339,7 +343,7 @@ static int parseObject(Json& json, const std::string& data)
         }
     }
 
-    if(!arrNode.isNull())
+    if(!arrNode.empty())
     {
         json.array_value().push_back(arrNode);
     }
@@ -406,7 +410,9 @@ static int parseString(Json& json, const std::string& data, int begin)
 
         // std::string tmp = data.substr(ks+1, data.find_first_of("\"", ks+1) - 1);
 
-        ret = _parser(subObj, data.substr(b, len));
+
+            ret = _parser(subObj, data.substr(b, len));
+        
 
         json[std::move(data.substr(ks+1, data.find_first_of("\"", ks+1) - 1))] = subObj;
 
@@ -493,15 +499,34 @@ static int _parser(Json& json, const std::string& data)
 
     ret = skip(data, 0);
 
-    switch (data[ret])
+    if((data.compare(ret, 4, "null") == 0) || (data.compare(ret, 4, "NULL") == 0))
     {
-        case '{':  ret = parseObject(json, data); break;
-        case '\"': ret = parseString(json, data, ret); break;
-        case '[':  ret = parseArray(json, data, ret); break;
-        case '}':
-        case ']':  ret = parseEnd(json, data, ret); break;
-        default:   ret = parseNumber(json, data); break;
+        json = Json(nullptr);
+        ret += data[ret + 4] == ',' ? 5 : 4;
     }
+    else if(data.compare(ret, 4, "true") == 0)
+    {
+        json = Json(true);
+        ret += ret += data[ret + 4] == ',' ? 5 : 4;
+    }
+    else if(data.compare(ret, 5, "false") == 0)
+    {
+        json = Json(false);
+        ret += ret += data[ret + 5] == ',' ? 6 : 5;
+    }
+    else
+    {
+        switch (data[ret])
+        {
+            case '{':  ret = parseObject(json, data); break;
+            case '\"': ret = parseString(json, data, ret); break;
+            case '[':  ret = parseArray(json, data, ret); break;
+            case '}':
+            case ']':  ret = parseEnd(json, data, ret); break;
+            default:   ret = parseNumber(json, data); break;
+        }
+    }
+
 
     return ret;
 }

@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <cstddef>
 
 
 namespace RainJson
@@ -18,6 +19,7 @@ typedef std::vector<Json> JArray;
 
 enum JType
 {
+    NUL,
     INT,
     DOUBLE,
     BOOL,
@@ -49,6 +51,7 @@ class Json
 public:
     Json() = default;
     Json(int val);
+    Json(std::nullptr_t val);
     Json(double val);
     Json(bool val);
     Json(const std::string& val);
@@ -65,12 +68,11 @@ public:
     Json& operator[] (const std::string& val);
     Json& operator[] (uint32_t i);
 
-    std::shared_ptr<JValue> ptr();
+    bool empty() const;
 
     bool isContained(const std::string& key);
 
     bool isNull() const;
-
     bool isArray() const;
     bool isNumber() const;
     bool isDouble() const;
