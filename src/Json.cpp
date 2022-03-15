@@ -60,6 +60,11 @@ bool Json::empty() const
     return m_value == nullptr;
 }
 
+void Json::clear()
+{
+    m_value.reset();
+}
+
 bool Json::isContained(const std::string& key)
 {
     bool ret = isObject();
@@ -146,9 +151,9 @@ std::string Json::print() const
     return isSuc ? ret : "";
 }
 
-Json Json::parser(const std::string& s)
+bool Json::parser(const std::string& s, Json& json)
 {
-    return JCodec::parser(s);
+    return JCodec::parser(s, json);
 }
 
 

@@ -68,6 +68,7 @@ public:
     Json& operator[] (const std::string& val);
     Json& operator[] (uint32_t i);
 
+    void clear();
     bool empty() const;
 
     bool isContained(const std::string& key);
@@ -89,7 +90,7 @@ public:
 
     std::string print() const;
 
-    static Json parser(const std::string& s);
+    static bool parser(const std::string& s, Json& json);
 
 };
 

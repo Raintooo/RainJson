@@ -334,11 +334,20 @@ static int parseObject(Json& json, const std::string& data)
 
             if(json.isArray())
             {
-                ret += _parser(arrNode, data.substr(sk));
+                int len = _parser(arrNode, data.substr(sk));
+
+                ret = len < 0 ? -1 : (ret + len);
             }
             else
             {
-                ret += _parser(json, data.substr(sk));
+                int len = _parser(json, data.substr(sk));
+
+                ret = len < 0 ? -1 : (ret + len);
+            }
+
+            if(ret < 0)
+            {
+                break;
             }
         }
     }
@@ -367,6 +376,7 @@ static int parseArray(Json& json, const std::string& data, int begin)
     int e = findEnd(std::string_view(data.c_str() + b, data.length() - b));
     int len = 0; 
     int i = 0;
+    int curlen = 0;
 
     while(len + 1 < e) // +1 加上 '[' 长度
     {
@@ -378,7 +388,12 @@ static int parseArray(Json& json, const std::string& data, int begin)
 
         int l = getArrayElementLen(data, i++);
 
-        len += _parser(json, data.substr(b + 1 + len, l));
+        if((curlen = _parser(json, data.substr(b + 1 + len, l))) < 0)
+        {
+            break;
+        }
+
+        len += curlen;
     }
 
     ret = b; 
@@ -410,13 +425,14 @@ static int parseString(Json& json, const std::string& data, int begin)
 
         // std::string tmp = data.substr(ks+1, data.find_first_of("\"", ks+1) - 1);
 
+        ret = _parser(subObj, data.substr(b, len));
 
-            ret = _parser(subObj, data.substr(b, len));
-        
+        if(ret >= 0)
+        {
+            json[std::move(data.substr(ks+1, data.find_first_of("\"", ks+1) - 1))] = subObj;
 
-        json[std::move(data.substr(ks+1, data.find_first_of("\"", ks+1) - 1))] = subObj;
-
-        ret = b + len;
+            ret = b + len;
+        }
     }
     else if(ks != std::string::npos)
     {
@@ -467,6 +483,22 @@ static int parseEnd(Json& json, const std::string& data, int begin)
     return ret;
 }
 
+static bool isNumber(const std::string& s)
+{
+    bool ret = true;
+
+    for(const auto& n : s)
+    {
+        if(n > '9' || n < '0')
+        {
+            ret = false;
+            break;
+        }
+    }
+
+    return ret;
+}
+
 static int parseNumber(Json& json, const std::string& data)
 {
     int ret = 0;
@@ -476,18 +508,26 @@ static int parseNumber(Json& json, const std::string& data)
     {
         std::string num = std::move(data.substr(0, e));
 
-        trim(num);
-
-        if(json.isArray())
+        if(isNumber(num))
         {
-            json.array_value().push_back(std::move(Json(std::stoi(num))));
-            // dynamic_cast<JValueArray*>(json.ptr().get())->push_back(Json(std::stoi(num)));
+            trim(num);
+
+            if(json.isArray())
+            {
+                json.array_value().push_back(std::move(Json(std::stoi(num))));
+                // dynamic_cast<JValueArray*>(json.ptr().get())->push_back(Json(std::stoi(num)));
+            }
+            else
+            {
+                json = std::stoi(num);
+            }
+            ret = e + 1;
         }
         else
         {
-            json = std::stoi(num);
+            ret = -1;
         }
-        ret = e + 1;
+
     }   
 
     return ret; 
@@ -507,40 +547,46 @@ static int _parser(Json& json, const std::string& data)
     else if(data.compare(ret, 4, "true") == 0)
     {
         json = Json(true);
-        ret += ret += data[ret + 4] == ',' ? 5 : 4;
+        ret += data[ret + 4] == ',' ? 5 : 4;
     }
     else if(data.compare(ret, 5, "false") == 0)
     {
         json = Json(false);
-        ret += ret += data[ret + 5] == ',' ? 6 : 5;
+        ret += data[ret + 5] == ',' ? 6 : 5;
     }
     else
     {
-        switch (data[ret])
-        {
-            case '{':  ret = parseObject(json, data); break;
-            case '\"': ret = parseString(json, data, ret); break;
-            case '[':  ret = parseArray(json, data, ret); break;
-            case '}':
-            case ']':  ret = parseEnd(json, data, ret); break;
-            default:   ret = parseNumber(json, data); break;
-        }
+        if(data[ret] == '{')         
+            ret = parseObject(json, data);
+        else if(data[ret] == '\"')   
+            ret = parseString(json, data, ret);
+        else if(data[ret] == '[')    
+            ret = parseArray(json, data, ret);
+        else if((data[ret] == '}') || (data[ret] == ']'))   
+            ret = parseEnd(json, data, ret);
+        else if(data[ret] >= '0' && data[ret] <= '9')     
+            ret = parseNumber(json, data);
+        else
+            ret = -1;
     }
-
 
     return ret;
 }
 
-Json JCodec::parser(const std::string& data)
+bool JCodec::parser(const std::string& data, Json& json)
 {
-    Json ret;
+    bool ret = true;
 
     if(!data.empty())
     {
         if(isVaildFormat(data))
         {
-            ret = JObject();
-            _parser(ret, data); 
+            json = JObject();
+            int n =  _parser(json, data);
+            if(n < 0)
+            {
+                ret = false;
+            } 
         }
     }
 

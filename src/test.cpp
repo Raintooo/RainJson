@@ -34,51 +34,58 @@ int main()
 
     // cout<< cJSON_Print(root);
 
-    std::string ss("{\"null\":null,\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}]}");
+    std::string ss("{\"null\":111,\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}]}");
     // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
 
     RainJson::Json jj;
 
     cout<< "jj: "<< jj.empty()<< endl;
 
-    jj = RainJson::Json::parser(ss);
-
-    cout<< "jj: "<< jj.empty()<< endl;
-
-    if(jj.empty())
+    bool ret = RainJson::Json::parser(ss, jj);
+    if(ret)
     {
-        cout<< "invaild json";
-        return 0;
-    }
+        cout<< "jj: "<< jj.empty()<< endl;
 
-    cout<< jj["null"].isNull()<< endl;
-    cout<< jj["null"].isBool()<< endl;
-
-    cout<< jj["a"].num_value()<< endl;
-
-    RainJson::Json jo = jj["b"];
-    cout<< jo["c"].num_value()<< endl;
-    cout<< jo["d"].string_value()<< endl;
-
-
-    cout<< jj["e"].string_value()<< endl;
-
-    RainJson::JArray jarr = jj["k"].array_value();
-
-    for(auto& n : jarr)
-    {
-        if(n.isNumber())
+        if(jj.empty())
         {
-            cout<< n.num_value()<< endl;
+            cout<< "invaild json";
+            return 0;
         }
-        else if(n.isString())
+
+        cout<< jj["null"].isNull()<< endl;
+        cout<< jj["null"].isBool()<< endl;
+
+        if(jj["null"].isBool())
         {
-            cout<< n.string_value()<< endl;
+            cout<< jj["null"].bool_value()<< endl;
         }
-        else if(n.isObject())
+
+        cout<< jj["a"].num_value()<< endl;
+
+        RainJson::Json jo = jj["b"];
+        cout<< jo["c"].num_value()<< endl;
+        cout<< jo["d"].string_value()<< endl;
+
+
+        cout<< jj["e"].string_value()<< endl;
+
+        RainJson::JArray jarr = jj["k"].array_value();
+
+        for(auto& n : jarr)
         {
-            cout<< "cc: "<< n["cc"].num_value()<< endl;
-            cout<< "oo: "<< n["oo"].string_value()<< endl;
+            if(n.isNumber())
+            {
+                cout<< n.num_value()<< endl;
+            }
+            else if(n.isString())
+            {
+                cout<< n.string_value()<< endl;
+            }
+            else if(n.isObject())
+            {
+                cout<< "cc: "<< n["cc"].num_value()<< endl;
+                cout<< "oo: "<< n["oo"].string_value()<< endl;
+            }
         }
     }
 
