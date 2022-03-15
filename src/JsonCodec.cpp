@@ -302,6 +302,22 @@ static bool isVaildFormat(const std::string& data)
     return ret;
 }
 
+static bool isNumber(const std::string& s)
+{
+    bool ret = true;
+
+    for(const auto& n : s)
+    {
+        if(n > '9' || n < '0')
+        {
+            ret = false;
+            break;
+        }
+    }
+
+    return ret;
+}
+
 static int parseObject(Json& json, const std::string& data)
 {
     int ret = 0;
@@ -483,22 +499,6 @@ static int parseEnd(Json& json, const std::string& data, int begin)
     return ret;
 }
 
-static bool isNumber(const std::string& s)
-{
-    bool ret = true;
-
-    for(const auto& n : s)
-    {
-        if(n > '9' || n < '0')
-        {
-            ret = false;
-            break;
-        }
-    }
-
-    return ret;
-}
-
 static int parseNumber(Json& json, const std::string& data)
 {
     int ret = 0;
@@ -577,17 +577,14 @@ bool JCodec::parser(const std::string& data, Json& json)
 {
     bool ret = true;
 
-    if(!data.empty())
+    if(!data.empty() && isVaildFormat(data))
     {
-        if(isVaildFormat(data))
+        json = JObject();
+        int n =  _parser(json, data);
+        if(n < 0)
         {
-            json = JObject();
-            int n =  _parser(json, data);
-            if(n < 0)
-            {
-                ret = false;
-            } 
-        }
+            ret = false;
+        } 
     }
 
     return ret;
