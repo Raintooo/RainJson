@@ -463,11 +463,14 @@ static int parseString(Json& json, const std::string& data, int begin)
     size_t ks = begin;//data.find_first_of("\"");
     // size_t ke = data.find_first_of(":", ks);
 
+    // 这里先找到字符串的长度, 
+    // 再根据字符串长度找到 ':', 
+    // 这样的方式, 是为了避免字符串内容中包含了 ':' 使得先再匹配时只匹配到字符串中的':', 而不是K-V的分隔符':'
     int len = findEnd(std::string_view(data.c_str(), data.length())); 
     int b = skip(data, len+1);
     size_t ke = data.find_first_of(":", b);
 
-    if(ks != std::string::npos && ke != std::string::npos && (len + 1 < ke))
+    if(ks != std::string::npos && ke != std::string::npos && (len + 1 < ke)) // (len + 1 < ke) 确保找到的 ':' 是K-V的分隔符(分隔符的位置一定大于字符串长度)
     {
         Json subObj = JObject();
 
