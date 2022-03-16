@@ -266,9 +266,13 @@ static int getArrayElementLen(const std::string& data, int i)
             }
             else if(data[k] == '{')
             {
-                isObject = !isObject;
+                isObject = true;
             }
-            else if((data[k] == ',' && !isInString && !isObject) || (data[k] == '}' && isObject))
+            else if((data[k] == '}' && isObject))
+            {
+                isObject = false;
+            }
+            else if((data[k] == ',' && !isInString && !isObject))
             {
                 ret++; // ','长度也加上
 
@@ -280,7 +284,7 @@ static int getArrayElementLen(const std::string& data, int i)
                 {
                     ret = 0;
                     curindex++;
-                    continue;;
+                    continue;
                 }
 
                 curindex++;
@@ -447,7 +451,7 @@ static int parseArray(Json& json, const std::string& data, int begin)
         len += curlen;
     }
 
-    ret = b; 
+    ret = e-b; 
 
     return ret;   
 }
@@ -457,15 +461,19 @@ static int parseString(Json& json, const std::string& data, int begin)
     int ret = 0;
 
     size_t ks = begin;//data.find_first_of("\"");
-    size_t ke = data.find_first_of(":", ks);
+    // size_t ke = data.find_first_of(":", ks);
 
-    if(ks != std::string::npos && ke != std::string::npos)
+    int len = findEnd(std::string_view(data.c_str(), data.length())); 
+    int b = skip(data, len+1);
+    size_t ke = data.find_first_of(":", b);
+
+    if(ks != std::string::npos && ke != std::string::npos && (len + 1 < ke))
     {
         Json subObj = JObject();
 
-        int b = skip(data, ke+1);
+        b = skip(data, ke+1);
 
-        int len = findEnd(std::string_view(data.c_str() + b, data.length() - b)); 
+        len = findEnd(std::string_view(data.c_str() + b, data.length() - b)); 
 
         // int len = findEnd(data.substr((b = skip(data, b)))); 
             

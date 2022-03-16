@@ -1,12 +1,62 @@
 
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "Json.h"
 
 #include "libcJSON.h"
 #include "utf.h"
 
 using namespace std;
+
+void json_test2()
+{
+    std::ifstream in("test_json.txt");
+    
+    if(!in.is_open())
+        return;
+
+    char* s = new char[4096];
+    in.read(s, 4096);
+
+    std::string ss = s;
+    RainJson::Json jj;
+    bool ret = RainJson::Json::parser(ss, jj);
+
+    if(ret)
+    {
+        cout<< "ret "<< jj["ret"].num_value()<< endl;
+        cout<< "code "<< jj["code"].num_value()<< endl;
+        cout<< "message "<< jj["message"].string_value()<< endl;
+
+        RainJson::Json jdata = jj["data"].object_value();
+        if(!jdata.empty())
+        {
+            cout<< "count "<< jdata["count"].num_value()<< endl;
+
+            RainJson::JArray arr = jdata["list"].array_value();
+            for(auto& n : arr)
+            {
+                cout<< "personid "<< n["personId"].string_value()<< endl;
+                cout<< "name "<< n["name"].string_value()<< endl;
+                cout<< "regTime "<< n["regTime"].string_value()<< endl;
+                cout<< "jobNumber "<< n["jobNumber"].string_value()<< endl;
+                cout<< "idCard "<< n["idCard"].string_value()<< endl;
+                cout<< "phone "<< n["phone"].string_value()<< endl;
+                cout<< "indate "<< n["indate"].string_value()<< endl;
+                cout<< "img "<< n["img"].string_value()<< endl;
+                cout<< "IC_NFC "<< n["IC_NFC"].string_value()<< endl;
+                cout<< "remarks1 "<< n["remarks1"].string_value()<< endl;
+                cout<< "remarks2 "<< n["remarks2"].string_value()<< endl;
+                cout<< "remarks3 "<< n["remarks3"].string_value()<< endl;
+                cout<< "remarks4 "<< n["remarks4"].string_value()<< endl;
+                cout<< "remarks5 "<< n["remarks5"].string_value()<< endl;
+                cout<< "======================================================="<< endl;
+            }
+        }
+    }
+
+}
 
 void json_test()
 {
@@ -38,6 +88,7 @@ void json_test()
     std::string ss("{\n\"null\":\"\\u0068\\u0065\\u006c\\u006c\\u006f\",\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"pp\\np\"}]}");
     // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
     // std::string ss();
+
     RainJson::Json jj;
 
     cout<< "jj: "<< jj.empty()<< endl;
@@ -118,4 +169,7 @@ int main()
 {
     json_test();
 
+    // cJSON* js = cJSON_Parse("{\"r\"et\":123}");
+
+    // cout<< cJSON_GetObjectItem(js, "r\"et")->valueint;
 }
