@@ -3,12 +3,11 @@
 
 #include <string>
 
-void utf16Toutf8(const std::string utf16, std::string utf8)
+namespace UtfCodec
 {
-    if(!utf16.empty())
-    {
-        
-    }
+
+std::string utf16le_to_utf8(const char *str, int n);
+
 }
 
 

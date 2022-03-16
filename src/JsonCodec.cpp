@@ -2,6 +2,7 @@
 
 #include "JsonCodec.h"
 #include "JsonValue.h"
+#include "utf.h"
 
 
 namespace RainJson
@@ -25,6 +26,40 @@ void stringProcess(std::string& s)
             // case '\u': break;
             default:
                 i++;
+        }
+    }
+}
+
+void escape(std::string& s)
+{
+    if(!s.empty())
+    {
+        bool utf16Transfer = false;
+        for(auto n = s.begin(); n != s.end();)
+        {
+            if(*n == '\\')
+            {
+                n++;     
+                switch(*n)
+                {
+                    case 'r': *n = '\r'; n--; n = s.erase(n); break;
+                    case 'n': *n = '\n'; n--; n = s.erase(n);break;
+                    case 'f': *n = '\f'; n--; n = s.erase(n);break;
+                    case 't': *n = '\t'; n--; n = s.erase(n);break;
+                    case 'b': *n = '\b'; n--; n = s.erase(n);break;
+                    case 'u': utf16Transfer = true; break;
+                    default: break;
+                }
+            }
+            else
+            {
+                n++;
+            }
+        }
+
+        if(utf16Transfer)
+        {
+            s = UtfCodec::utf16le_to_utf8(s.c_str(), s.length());
         }
     }
 }
@@ -466,6 +501,8 @@ static int parseString(Json& json, const std::string& data, int begin)
         {
             s.erase(s.length()-1, 1);
         }
+
+        escape(s);
 
         if(json.isArray())
         {

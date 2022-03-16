@@ -4,10 +4,11 @@
 #include "Json.h"
 
 #include "libcJSON.h"
+#include "utf.h"
 
 using namespace std;
 
-int main()
+void json_test()
 {
     std::string s("s");
     RainJson::JArray arr{1, 2, 3, 4, 
@@ -34,9 +35,9 @@ int main()
 
     // cout<< cJSON_Print(root);
 
-    std::string ss("{\"null\":111,\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"ppp\"}]}");
+    std::string ss("{\n\"null\":\"\\u0068\\u0065\\u006c\\u006c\\u006f\",\"a\":123,\"b\":{\"c\":345,\"d\":\"ddd\"},\"e\":\"eeee\",\"k\":[8890,\"kkkk\",{\"cc\":112,\"oo\":\"pp\\np\"}]}");
     // std::string ss("{\"a\":123,\"e\":\"eeee\",\"k\":[0,\"ss\"]}");
-    // std::string ss;
+    // std::string ss();
     RainJson::Json jj;
 
     cout<< "jj: "<< jj.empty()<< endl;
@@ -49,7 +50,7 @@ int main()
         if(jj.empty())
         {
             cout<< "invaild json";
-            return 0;
+            return;
         }
 
         cout<< jj["null"].isNull()<< endl;
@@ -57,17 +58,22 @@ int main()
 
         if(jj["null"].isBool())
         {
-            cout<< jj["null"].bool_value()<< endl;
+            cout<< "null: "<< jj["null"].bool_value()<< endl;
         }
 
-        cout<< jj["a"].num_value()<< endl;
+        if(jj["null"].isString())
+        {
+            cout<< "null: "<<jj["null"].string_value()<< endl;
+        }
+
+        cout<< "a: "<<jj["a"].num_value()<< endl;
 
         RainJson::Json jo = jj["b"];
-        cout<< jo["c"].num_value()<< endl;
-        cout<< jo["d"].string_value()<< endl;
+        cout<< "c: "<<jo["c"].num_value()<< endl;
+        cout<< "d: "<<jo["d"].string_value()<< endl;
 
 
-        cout<< jj["e"].string_value()<< endl;
+        cout<< "e: "<<jj["e"].string_value()<< endl;
 
         RainJson::JArray jarr = jj["k"].array_value();
 
@@ -97,6 +103,19 @@ int main()
     // cout<< jo["d"].string_value()<< endl;
 
     // cout<< jj.isContained("d")<< endl;
-    // cout<< jj["e"].string_value()<< endl;
+    // cout<< jj["e"].string_value()<< endl;    
+}
+
+
+void utf_test()
+{
+    const char* s = "\\u0068\\u0065\\u006c\\u006c\\u006f";
+
+    cout<< UtfCodec::utf16le_to_utf8(s, 31);
+}
+
+int main()
+{
+    json_test();
 
 }
